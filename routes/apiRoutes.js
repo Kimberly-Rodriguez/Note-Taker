@@ -1,13 +1,17 @@
 const router = require("express").Router();
 
-
-//routes
-
 router.get("/api", (req, res) => {
+  console.log(req.query); // req.query is anything that comes after a question mark
 
+res.json(" ")
 });
 
-router.get("/api", (req, res) => {
+router.post("/api", (req, res) => {
+  res.json({
+    term: 'router',
+    description:
+    'hey there'
+  })
 
 });
 
