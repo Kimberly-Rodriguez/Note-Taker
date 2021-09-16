@@ -1,20 +1,21 @@
 const notes = require('express').Router();
-// Helper method for generating unique ids
-const { v4: uuidv4 } = require('uuid.js');
+const uuid  = require('../helpers/uuid');
 const {
   readFromFile,
   readAndAppend,
   writeToFile,
 } = require('../helpers/fsUtils');
-const path = require('path');
 
-// GET Route for retrieving all the notes
-notes.get('/notes', (req, res) => {
+
+
+// GET route for retrieving all the notes
+notes.get('/api/notes', (req, res) => {
   readFromFile('./db/db.json').then((data) => res.json(JSON.parse(data)));
 });
 
-// GET Route for a specific note
-notes.get('/notes/:id', (req, res) => {
+
+// GET route for a specific note with ID
+notes.get('/api/notes/:id', (req, res) => {
   const noteId = req.params.id;
   readFromFile('./db/db.json')
     .then((data) => JSON.parse(data))
@@ -26,41 +27,48 @@ notes.get('/notes/:id', (req, res) => {
     });
 });
 
-// DELETE Route for a specific note
-notes.delete('/notes/:id', (req, res) => {
-  const noteId = req.params.id;
-  readFromFile('./db/db.json')
-    .then((data) => JSON.parse(data))
-    .then((json) => {
-      // Make a new array of all notes 
-      const result = json.filter((note) => note.id !== noteId);
+// POST route for a new note
+notes.post('/api/notes', (req, res) => {
 
-      // Save that array to the filesystem
-      writeToFile('./db/db.json', result);
-
-      // Respond to the DELETE request
-      res.json(`Item ${noteId} has been deleted 🗑️`);
-    });
-});
-
-// POST Route for a new note
-notes.post('/notes', (req, res) => {
   console.log(req.body);
 
+  //destructuring assignment for the items in req.body
   const { title, text } = req.body;
 
   if (req.body) {
+    //variable for the object we will save
     const newNote = {
       title,
       text,
-      id: uuidv4(),
+      id: uuid(),
     };
 
+    //appending it to the json file
     readAndAppend(newNote, './db/db.json');
     res.json(`Note added successfully 🚀`);
   } else {
     res.error('Error in adding note');
   }
 });
+
+
+// DELETE route for a specific note
+notes.delete('/api/notes/:id', (req, res) => {
+  const noteId = req.params.id;
+  readFromFile('./db/db.json')
+    .then((data) => JSON.parse(data))
+    .then((json) => {
+      // Make a new array of all notes except the one with the ID provided in the URL
+      const result = json.filter((note) => note.id !== noteId);
+
+      // Save that array to the filesystem
+      writeToFile('./db/db.json', result);
+
+      // Respond to the DELETE request
+      res.json(`Note ${noteId} has been deleted`);
+    });
+});
+
+
 
 module.exports = notes;
